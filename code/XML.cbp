@@ -12,6 +12,8 @@
 				<Option output="../bin/XML_Validator" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/" />
 				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="../test/test.xml ../test/test.dtd" />
 			</Target>
 		</Build>
 		<Unit filename="XML_Parser.cpp" />
