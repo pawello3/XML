@@ -4,6 +4,7 @@
 #include <ifstream>
 #include <list>
 #include <unordered_map>
+#include <unordered_set>
 
 struct Automaton_Node
 {
@@ -31,9 +32,14 @@ class Automaton
 		std::string regular_expression;
 		bool automaton_already_constructed;
 		Automaton_Node* root;
+		Automaton_Node* final_state;
 
 		std::string convert_to_reverse_Polish_notation(std::string input);
 		void build_automaton(void);
+		std::unordered_set<Automaton_Node*> compute_epsilon_closure(Automaton_Node* node);
+		std::unordered_set<Automaton_Node*> compute_epsilon_closure(std::unordered_set<Automaton_Node*> states);
+		std::unordered_set<Automaton_Node*> compute_one_step_closure(Automaton_Node* node, char step);
+		std::unordered_set<Automaton_Node*> compute_one_step_closure(std::unordered_set<Automaton_Node*> states, char step);
 };
 
 class Tree_Node

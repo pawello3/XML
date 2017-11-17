@@ -5,18 +5,61 @@
 #include <utility>
 #include <stack>
 
-////////////////////////////////////////////////////////////////////////////////
-
 Automaton::Automaton(std::string regular_expression)
 	:regular_expression(regular_expression)
 	,automaton_already_constructed(false)
 	,root(nullptr)
+	,final_state(nullptr)
 {
 }
 
 Automaton::~Automaton(void)
 {
 	delete root;
+}
+
+std::unordered_set<Automaton_Node*> Automaton::compute_epsilon_closure(Automaton_Node* node)
+{
+	std::unordered_set<Automaton_Node*> new_states = std::unordered_set<Automaton_Node*>();
+	if(node->type1 == 127)
+		new_states.insert(node->next1);
+	if(node->type2 == 127)
+		new_states.insert(node->next2);
+	return new_states;
+}
+
+std::unordered_set<Automaton_Node*> Automaton::compute_epsilon_closure(std::unordered_set<Automaton_Node*> states)
+{
+	std::unordered_set<Automaton_Node*> new_states = std::unordered_set<Automaton_Node*>();
+	std::unordered_set<Automaton_Node*> new_states_partial = std::unordered_set<Automaton_Node*>();
+	for(auto it = states.begin(); it != states.end(); it++)
+	{
+		new_states_partial = compute_epsilon_closure(*it);
+		new_states.insert(new_states_partial.begin(), new_states_partial.end());
+	}
+	return new_states;
+}
+
+std::unordered_set<Automaton_Node*> Automaton::compute_one_step_closure(Automaton_Node* node, char step)
+{
+	std::unordered_set<Automaton_Node*> new_states = std::unordered_set<Automaton_Node*>();
+	if(node->type1 == step)
+		new_states.insert(node->next1);
+	if(node->type2 == step)
+		new_states.insert(node->next2);
+	return new_states;
+}
+
+std::unordered_set<Automaton_Node*> Automaton::compute_one_step_closure(std::unordered_set<Automaton_Node*> states, char step)
+{
+	std::unordered_set<Automaton_Node*> new_states = std::unordered_set<Automaton_Node*>();
+	std::unordered_set<Automaton_Node*> new_states_partial = std::unordered_set<Automaton_Node*>();
+	for(auto it = states.begin(); it != states.end(); it++)
+	{
+		new_states_partial = compute_one_step_closure(*it, step);
+		new_states.insert(new_states_partial.begin(), new_states_partial.end());
+	}
+	return new_states;
 }
 
 bool Automaton::matches_regex(std::list<char>* children)
@@ -32,7 +75,15 @@ bool Automaton::matches_regex(std::list<char>* children)
 		return children.size() == 0;
 
 	// simulate NFA
+    std::unordered_set<Automaton_Node*> states = compute_epsilon_closure(root);
 
+    for(auto it = children->begin(); it != children.end(); it++)
+	{
+		states = compute_one_step_closure(states, *it);
+		states = compute_epsilon_closure(states);
+	}
+
+	return states.count(final_state) == 1;
 }
 
 std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
@@ -85,7 +136,7 @@ void build_automaton(void)
 {
     std::string postfix_regex = convert_to_reverse_Polish_notation(this->regular_expression);
 
-    if(postfix_regex == '_')
+    if(postfix_regex == "_")
 		return;
 
     std::stack<Automaton_Fragment*> fragments = std::stack<Automaton_Fragment*>();
@@ -167,7 +218,8 @@ void build_automaton(void)
 				break;
 		}
 	}
-	this->root = fragments.pop()->startNode;
+	this->root = fragments.top()->startNode;
+	this->final_state = fragments.pop()->endNode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
