@@ -26,6 +26,7 @@ std::unordered_set<Automaton_Node*> Automaton::compute_epsilon_closure(Automaton
 		new_states.insert(node->next1);
 	if(node->type2 == 127)
 		new_states.insert(node->next2);
+	new_states.insert(node);
 	return new_states;
 }
 
@@ -38,6 +39,7 @@ std::unordered_set<Automaton_Node*> Automaton::compute_epsilon_closure(std::unor
 		new_states_partial = compute_epsilon_closure(*it);
 		new_states.insert(new_states_partial.begin(), new_states_partial.end());
 	}
+	new_states.insert(states.begin(), states.end());
 	return new_states;
 }
 
@@ -75,13 +77,29 @@ bool Automaton::matches_regex(std::list<char>* children)
 	if(root == nullptr)
 		return children->size() == 0;
 
+	//std::cout << root->type1 << std::endl;
+	//std::cout << root->type2 << std::endl;
+
 	// simulate NFA
-    std::unordered_set<Automaton_Node*> states = compute_epsilon_closure(root);
+    std::unordered_set<Automaton_Node*> states = compute_epsilon_closure(this->root);
 
     for(auto it = children->begin(); it != children->end(); it++)
 	{
+		//std::cout << "L1" << (*it) << "\n";
 		states = compute_one_step_closure(states, *it);
+		/*for(auto it = states.begin(); it != states.end(); it++)
+		{
+			std::cout << "L2\n";
+			std::cout << (*it)->type1 << std::endl;
+			std::cout << (*it)->type2 << std::endl;
+		}*/
 		states = compute_epsilon_closure(states);
+		/*for(auto it = states.begin(); it != states.end(); it++)
+		{
+			std::cout << "L3\n";
+			std::cout << (*it)->type1 << std::endl;
+			std::cout << (*it)->type2 << std::endl;
+		}*/
 	}
 
 	return states.count(final_state) == 1;
@@ -93,7 +111,6 @@ std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
 	if(input_size == 1 && input[0] == '_')
 		return input;
 
-	input += "\0"; // easy look-ahead for introducing explicit concatenation
 	std::stack<char> aux_stack = std::stack<char>();
 	std::string output = "";
 
@@ -101,10 +118,12 @@ std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
 	{
 		switch(input[i])
 		{
+			case '(':
+				if(i > 0)
+					aux_stack.push('.');
 			case '?':
 			case '+':
 			case '*':
-			case '(':
 				aux_stack.push(input[i]);
 				break;
 			case ')':
@@ -117,18 +136,12 @@ std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
 				break;
 			default:
 				output += input[i];
-				switch(input[i + 1])
+				if(i > 0)
 				{
-					case '?':
-					case '+':
-					case '*':
-					case '(':
-					case ')':
-					case '\0':
-						break;
-					default:
-						bool stop = true;
-						while(stop && !aux_stack.empty())
+					if(input[i - 1] != '(')
+					{
+						bool stop = false;
+						while(!stop && !aux_stack.empty())
 						{
 							switch(aux_stack.top())
 							{
@@ -138,11 +151,11 @@ std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
 									output += aux_stack.top();
 									aux_stack.pop();
 								default:
-									stop = false;
+									stop = true;
 							}
 						}
 						aux_stack.push('.'); // concatenation
-						break;
+					}
 				}
 				break;
 		}
@@ -173,11 +186,14 @@ void Automaton::build_automaton(void)
 	Automaton_Fragment* fragment_top1 = nullptr;
 	Automaton_Fragment* fragment_top2 = nullptr;
 
+	//std::cout << postfix_regex << std::endl;
+
 	for(unsigned int i = 0; i < postfix_regex.size(); i++)
 	{
 		switch(postfix_regex[i])
 		{
 			case '.':
+				//std::cout << ".\n";
 				fragment_top2 = fragments.top();
 				fragments.pop();
 				fragment_top1 = fragments.top();
@@ -187,11 +203,12 @@ void Automaton::build_automaton(void)
 				fragment_top1->endNode->next2 = fragment_top2->startNode->next2;
 				fragment_top1->endNode->type2 = fragment_top2->startNode->type2;
 				delete fragment_top2->startNode;
-				delete fragment_top2;
 				fragment_top1->endNode = fragment_top2->endNode;
+				delete fragment_top2;
 				fragments.push(fragment_top1);
 				break;
 			case '?':
+				//std::cout << "?\n";
 				fragment_top = fragments.top();
 				fragments.pop();
 				left = new Automaton_Node();
@@ -203,6 +220,7 @@ void Automaton::build_automaton(void)
 				fragments.push(fragment_top);
 				break;
 			case '+':
+				//std::cout << "+\n";
 				fragment_top = fragments.top();
 				fragments.pop();
 				left = new Automaton_Node();
@@ -215,11 +233,16 @@ void Automaton::build_automaton(void)
 				right->next2 = nullptr;
 				right->type1 = '\0';
 				right->type2 = '\0';
+				fragment_top->endNode->next1 = right;
+				fragment_top->endNode->next2 = fragment_top->startNode;
+				fragment_top->endNode->type1 = 127;
+				fragment_top->endNode->type2 = 127;
 				fragment_top->startNode = left;
 				fragment_top->endNode = right;
 				fragments.push(fragment_top);
 				break;
 			case '*':
+				//std::cout << "*\n";
 				fragment_top = fragments.top();
 				fragments.pop();
 				left = new Automaton_Node();
@@ -232,11 +255,16 @@ void Automaton::build_automaton(void)
 				right->next2 = nullptr;
 				right->type1 = '\0';
 				right->type2 = '\0';
+				fragment_top->endNode->next1 = right;
+				fragment_top->endNode->next2 = fragment_top->startNode;
+				fragment_top->endNode->type1 = 127;
+				fragment_top->endNode->type2 = 127;
 				fragment_top->startNode = left;
 				fragment_top->endNode = right;
 				fragments.push(fragment_top);
 				break;
 			default:
+				//std::cout << "letter\n";
 				left = new Automaton_Node();
 				right = new Automaton_Node();
 				left->next1 = right;

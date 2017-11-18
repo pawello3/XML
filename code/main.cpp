@@ -33,12 +33,12 @@ int main(int argc, char* argv[])
 		tree->declare_automata(argv[2]);
 
 		if(tree->is_valid())
-			std::cout << "valid\n";
+			std::cout << "valid";
 		else
-			std::cout << "not valid\n";
+			std::cout << "not valid";
 	}
 	else
-		std::cout << "not well-formed\nnot valid\n";
+		std::cout << "not well-formed\nnot valid";
 
 	delete tree;
 	delete parser;
