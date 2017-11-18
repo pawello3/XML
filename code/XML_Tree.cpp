@@ -32,15 +32,27 @@ std::unordered_set<Automaton_Node*> Automaton::compute_epsilon_closure(Automaton
 
 std::unordered_set<Automaton_Node*> Automaton::compute_epsilon_closure(std::unordered_set<Automaton_Node*> states)
 {
-	std::unordered_set<Automaton_Node*> new_states = std::unordered_set<Automaton_Node*>();
+	std::unordered_set<Automaton_Node*> states_iter_before = std::unordered_set<Automaton_Node*>();
+	std::unordered_set<Automaton_Node*> states_iter_after = std::unordered_set<Automaton_Node*>();
+	states_iter_after.insert(states.begin(), states.end());
 	std::unordered_set<Automaton_Node*> new_states_partial = std::unordered_set<Automaton_Node*>();
-	for(auto it = states.begin(); it != states.end(); it++)
+
+	do // saturate the set of states by doing all possible epsilon steps (0 or more)
 	{
-		new_states_partial = compute_epsilon_closure(*it);
-		new_states.insert(new_states_partial.begin(), new_states_partial.end());
+		states_iter_before.clear();
+		states_iter_before.insert(states_iter_after.begin(), states_iter_after.end());
+		states_iter_after.clear();
+		new_states_partial.clear();
+		for(auto it = states_iter_before.begin(); it != states_iter_before.end(); it++)
+		{
+			new_states_partial = compute_epsilon_closure(*it);
+			states_iter_after.insert(new_states_partial.begin(), new_states_partial.end());
+		}
+		states_iter_after.insert(states_iter_before.begin(), states_iter_before.end());
 	}
-	new_states.insert(states.begin(), states.end());
-	return new_states;
+	while(states_iter_before != states_iter_after);
+
+	return states_iter_after;
 }
 
 std::unordered_set<Automaton_Node*> Automaton::compute_one_step_closure(Automaton_Node* node, char step)
@@ -77,28 +89,36 @@ bool Automaton::matches_regex(std::list<char>* children)
 	if(root == nullptr)
 		return children->size() == 0;
 
-	//std::cout << root->type1 << std::endl;
-	//std::cout << root->type2 << std::endl;
+	/*std::cout << "Root" << std::endl;
+	std::cout << root->type1 << " " << root->next1 << std::endl;
+	std::cout << root->type2 << " " << root->next2 << std::endl;*/
 
 	// simulate NFA
     std::unordered_set<Automaton_Node*> states = compute_epsilon_closure(this->root);
+    states = compute_epsilon_closure(states);
+    /*for(auto it = states.begin(); it != states.end(); it++)
+	{
+		std::cout << "\tL0\n";
+		std::cout << "\t" << (*it)->type1 << " " << (*it)->next1 << std::endl;
+		std::cout << "\t" << (*it)->type2 << " " << (*it)->next2 << std::endl;
+	}*/
 
     for(auto it = children->begin(); it != children->end(); it++)
 	{
-		//std::cout << "L1" << (*it) << "\n";
+		//std::cout << "\t\tL1 " << (*it) << std::endl;
 		states = compute_one_step_closure(states, *it);
 		/*for(auto it = states.begin(); it != states.end(); it++)
 		{
-			std::cout << "L2\n";
-			std::cout << (*it)->type1 << std::endl;
-			std::cout << (*it)->type2 << std::endl;
+			std::cout << "\t\t\tL2\n";
+			std::cout << "\t\t\t" << (*it)->type1 << " " << (*it)->next1 << std::endl;
+			std::cout << "\t\t\t" << (*it)->type2 << " " << (*it)->next2 << std::endl;
 		}*/
 		states = compute_epsilon_closure(states);
 		/*for(auto it = states.begin(); it != states.end(); it++)
 		{
-			std::cout << "L3\n";
-			std::cout << (*it)->type1 << std::endl;
-			std::cout << (*it)->type2 << std::endl;
+			std::cout << "\t\t\tL3\n";
+			std::cout << "\t\t\t" << (*it)->type1 << " " << (*it)->next1 << std::endl;
+			std::cout << "\t\t\t" << (*it)->type2 << " " << (*it)->next2 << std::endl;
 		}*/
 	}
 
@@ -118,9 +138,6 @@ std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
 	{
 		switch(input[i])
 		{
-			case '(':
-				if(i > 0)
-					aux_stack.push('.');
 			case '?':
 			case '+':
 			case '*':
@@ -134,29 +151,24 @@ std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
 				}
 				aux_stack.pop();
 				break;
+			case '(':
 			default:
-				output += input[i];
 				if(i > 0)
 				{
 					if(input[i - 1] != '(')
 					{
-						bool stop = false;
-						while(!stop && !aux_stack.empty())
+						while(!aux_stack.empty() && aux_stack.top() != '(')
 						{
-							switch(aux_stack.top())
-							{
-								case '?':
-								case '+':
-								case '*':
-									output += aux_stack.top();
-									aux_stack.pop();
-								default:
-									stop = true;
-							}
+							output += aux_stack.top();
+							aux_stack.pop();
 						}
 						aux_stack.push('.'); // concatenation
 					}
 				}
+				if(input[i] == '(')
+					aux_stack.push(input[i]);
+				else
+					output += input[i];
 				break;
 		}
 	}
@@ -212,11 +224,21 @@ void Automaton::build_automaton(void)
 				fragment_top = fragments.top();
 				fragments.pop();
 				left = new Automaton_Node();
+				right = new Automaton_Node();
 				left->next1 = fragment_top->startNode;
-				left->next2 = fragment_top->endNode;
+				left->next2 = right;
 				left->type1 = 127;
 				left->type2 = 127;
+				fragment_top->endNode->next1 = right;
+				fragment_top->endNode->next2 = nullptr;
+				fragment_top->endNode->type1 = 127;
+				fragment_top->endNode->type2 = '\0';
+				right->next1 = nullptr;
+				right->next2 = nullptr;
+				right->type1 = '\0';
+				right->type2 = '\0';
 				fragment_top->startNode = left;
+				fragment_top->endNode = right;
 				fragments.push(fragment_top);
 				break;
 			case '+':
@@ -229,14 +251,14 @@ void Automaton::build_automaton(void)
 				left->next2 = nullptr;
 				left->type1 = 127;
 				left->type2 = '\0';
-				right->next1 = nullptr;
-				right->next2 = nullptr;
-				right->type1 = '\0';
-				right->type2 = '\0';
 				fragment_top->endNode->next1 = right;
 				fragment_top->endNode->next2 = fragment_top->startNode;
 				fragment_top->endNode->type1 = 127;
 				fragment_top->endNode->type2 = 127;
+				right->next1 = nullptr;
+				right->next2 = nullptr;
+				right->type1 = '\0';
+				right->type2 = '\0';
 				fragment_top->startNode = left;
 				fragment_top->endNode = right;
 				fragments.push(fragment_top);
@@ -251,14 +273,14 @@ void Automaton::build_automaton(void)
 				left->next2 = right;
 				left->type1 = 127;
 				left->type2 = 127;
-				right->next1 = nullptr;
-				right->next2 = nullptr;
-				right->type1 = '\0';
-				right->type2 = '\0';
 				fragment_top->endNode->next1 = right;
 				fragment_top->endNode->next2 = fragment_top->startNode;
 				fragment_top->endNode->type1 = 127;
 				fragment_top->endNode->type2 = 127;
+				right->next1 = nullptr;
+				right->next2 = nullptr;
+				right->type1 = '\0';
+				right->type2 = '\0';
 				fragment_top->startNode = left;
 				fragment_top->endNode = right;
 				fragments.push(fragment_top);

@@ -1,6 +1,6 @@
 #include <iostream>
-#include "XML_Parser.hpp"
 #include "XML_Tree.hpp"
+#include "XML_Parser.hpp"
 
 using namespace std;
 
@@ -33,12 +33,12 @@ int main(int argc, char* argv[])
 		tree->declare_automata(argv[2]);
 
 		if(tree->is_valid())
-			std::cout << "valid";
+			std::cout << "valid\n";
 		else
-			std::cout << "not valid";
+			std::cout << "not valid\n";
 	}
 	else
-		std::cout << "not well-formed\nnot valid";
+		std::cout << "not well-formed\nnot valid\n";
 
 	delete tree;
 	delete parser;
