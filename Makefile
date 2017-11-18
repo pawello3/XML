@@ -29,7 +29,7 @@ $(OBJECTS_DIRECTORY)/%.o: $(CODE_DIRECTORY)/%.cpp $(DEPENDENCIES)
 .PHONY: clean distclean
 
 zip: clean
-	zip -r $(ZIP_FILE) $(CODE_DIRECTORY) Makefile README.txt
+	zip -r $(ZIP_FILE) $(CODE_DIRECTORY) Makefile README.txt testing.ipynb
 
 clean:
 	find . -name "*.o" -type f -exec rm '{}' \;
