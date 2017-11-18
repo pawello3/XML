@@ -1,3 +1,5 @@
+// Author: Paweł Guzewicz
+
 #ifndef XML_DTD_VALIDATOR_HPP_INCLUDED
 #define XML_DTD_VALIDATOR_HPP_INCLUDED
 

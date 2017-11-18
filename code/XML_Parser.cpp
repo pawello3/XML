@@ -1,3 +1,5 @@
+// Author: Paweł Guzewicz
+
 #include "XML_Parser.hpp"
 #include <iostream>
 #include <fstream>

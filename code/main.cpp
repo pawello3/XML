@@ -1,3 +1,5 @@
+// Author: Paweł Guzewicz
+
 #include <iostream>
 #include "XML_Tree.hpp"
 #include "XML_Parser.hpp"

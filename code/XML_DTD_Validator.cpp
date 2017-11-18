@@ -1,3 +1,5 @@
+// Author: Paweł Guzewicz
+
 #include "XML_DTD_Validator.hpp"
 #include <stack>
 
@@ -12,125 +14,6 @@ Automaton::Automaton(std::string regular_expression)
 Automaton::~Automaton(void)
 {
 	delete root;
-}
-
-std::unordered_set<Automaton_Node*>
-Automaton::compute_epsilon_closure(Automaton_Node* node)
-{
-	std::unordered_set<Automaton_Node*> new_states =
-		std::unordered_set<Automaton_Node*>();
-
-	// add the state itself
-	new_states.insert(node);
-
-	// add the states accessible in one epsilon step
-	if(node->type1 == 127)
-		new_states.insert(node->next1);
-	if(node->type2 == 127)
-		new_states.insert(node->next2);
-
-	return new_states;
-}
-
-std::unordered_set<Automaton_Node*>
-Automaton::compute_epsilon_closure(std::unordered_set<Automaton_Node*> states)
-{
-	std::unordered_set<Automaton_Node*> states_iter_before =
-		std::unordered_set<Automaton_Node*>();
-
-	std::unordered_set<Automaton_Node*> states_iter_after =
-		std::unordered_set<Automaton_Node*>();
-
-	states_iter_after.insert(states.begin(), states.end());
-
-	std::unordered_set<Automaton_Node*> new_states_partial =
-		std::unordered_set<Automaton_Node*>();
-
-	do // saturate the set of states with all possible epsilon steps (0 or more)
-	{
-		states_iter_before.clear();
-
-		states_iter_before.insert(states_iter_after.begin(),
-			states_iter_after.end());
-
-		states_iter_after.clear();
-
-		new_states_partial.clear();
-
-		for(auto it = states_iter_before.begin();
-			it != states_iter_before.end(); it++)
-		{
-			new_states_partial = compute_epsilon_closure(*it);
-			states_iter_after.insert(new_states_partial.begin(),
-				new_states_partial.end());
-		}
-
-		states_iter_after.insert(states_iter_before.begin(),
-			states_iter_before.end());
-	}
-	while(states_iter_before != states_iter_after);
-
-	return states_iter_after;
-}
-
-std::unordered_set<Automaton_Node*>
-Automaton::compute_one_step_closure(Automaton_Node* node, char label)
-{
-	std::unordered_set<Automaton_Node*> new_states =
-		std::unordered_set<Automaton_Node*>();
-
-	// add the states accessible in one step following label
-	if(node->type1 == label)
-		new_states.insert(node->next1);
-	if(node->type2 == label)
-		new_states.insert(node->next2);
-
-	return new_states;
-}
-
-std::unordered_set<Automaton_Node*>
-Automaton::compute_one_step_closure(std::unordered_set<Automaton_Node*> states,
-	char label)
-{
-	std::unordered_set<Automaton_Node*> new_states =
-		std::unordered_set<Automaton_Node*>();
-
-	std::unordered_set<Automaton_Node*> new_states_partial =
-		std::unordered_set<Automaton_Node*>();
-
-	/* add all the states accessible in one step following label from the
-	current state's set*/
-	for(auto it = states.begin(); it != states.end(); it++)
-	{
-		new_states_partial = compute_one_step_closure(*it, label);
-		new_states.insert(new_states_partial.begin(), new_states_partial.end());
-	}
-	return new_states;
-}
-
-bool Automaton::matches_regex(std::list<char>* children)
-{
-	if(!this->automaton_already_constructed)
-	{
-		this->build_automaton();
-		automaton_already_constructed = true;
-	}
-
-	// Check children with automaton
-	if(root == nullptr)
-		return children->size() == 0;
-
-	// simulate NFA
-    std::unordered_set<Automaton_Node*> states =
-		compute_epsilon_closure(this->root);
-    states = compute_epsilon_closure(states);
-    for(auto it = children->begin(); it != children->end(); it++)
-	{
-		states = compute_one_step_closure(states, *it);
-		states = compute_epsilon_closure(states);
-	}
-
-	return states.count(final_state) == 1;
 }
 
 std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
@@ -314,4 +197,123 @@ void Automaton::build_automaton(void)
 	this->root = fragments.top()->startNode;
 	this->final_state = fragments.top()->endNode;
 	fragments.pop();
+}
+
+std::unordered_set<Automaton_Node*>
+Automaton::compute_epsilon_closure(Automaton_Node* node)
+{
+	std::unordered_set<Automaton_Node*> new_states =
+		std::unordered_set<Automaton_Node*>();
+
+	// add the state itself
+	new_states.insert(node);
+
+	// add the states accessible in one epsilon step
+	if(node->type1 == 127)
+		new_states.insert(node->next1);
+	if(node->type2 == 127)
+		new_states.insert(node->next2);
+
+	return new_states;
+}
+
+std::unordered_set<Automaton_Node*>
+Automaton::compute_epsilon_closure(std::unordered_set<Automaton_Node*> states)
+{
+	std::unordered_set<Automaton_Node*> states_iter_before =
+		std::unordered_set<Automaton_Node*>();
+
+	std::unordered_set<Automaton_Node*> states_iter_after =
+		std::unordered_set<Automaton_Node*>();
+
+	states_iter_after.insert(states.begin(), states.end());
+
+	std::unordered_set<Automaton_Node*> new_states_partial =
+		std::unordered_set<Automaton_Node*>();
+
+	do // saturate the set of states with all possible epsilon steps (0 or more)
+	{
+		states_iter_before.clear();
+
+		states_iter_before.insert(states_iter_after.begin(),
+			states_iter_after.end());
+
+		states_iter_after.clear();
+
+		new_states_partial.clear();
+
+		for(auto it = states_iter_before.begin();
+			it != states_iter_before.end(); it++)
+		{
+			new_states_partial = compute_epsilon_closure(*it);
+			states_iter_after.insert(new_states_partial.begin(),
+				new_states_partial.end());
+		}
+
+		states_iter_after.insert(states_iter_before.begin(),
+			states_iter_before.end());
+	}
+	while(states_iter_before != states_iter_after);
+
+	return states_iter_after;
+}
+
+std::unordered_set<Automaton_Node*>
+Automaton::compute_one_step_closure(Automaton_Node* node, char label)
+{
+	std::unordered_set<Automaton_Node*> new_states =
+		std::unordered_set<Automaton_Node*>();
+
+	// add the states accessible in one step following label
+	if(node->type1 == label)
+		new_states.insert(node->next1);
+	if(node->type2 == label)
+		new_states.insert(node->next2);
+
+	return new_states;
+}
+
+std::unordered_set<Automaton_Node*>
+Automaton::compute_one_step_closure(std::unordered_set<Automaton_Node*> states,
+	char label)
+{
+	std::unordered_set<Automaton_Node*> new_states =
+		std::unordered_set<Automaton_Node*>();
+
+	std::unordered_set<Automaton_Node*> new_states_partial =
+		std::unordered_set<Automaton_Node*>();
+
+	/* add all the states accessible in one step following label from the
+	current state's set*/
+	for(auto it = states.begin(); it != states.end(); it++)
+	{
+		new_states_partial = compute_one_step_closure(*it, label);
+		new_states.insert(new_states_partial.begin(), new_states_partial.end());
+	}
+	return new_states;
+}
+
+bool Automaton::matches_regex(std::list<char>* children)
+{
+	if(!this->automaton_already_constructed)
+	{
+		this->build_automaton();
+		automaton_already_constructed = true;
+	}
+
+	// Check children with automaton
+	if(root == nullptr)
+		return children->size() == 0;
+
+	// simulate NFA
+    std::unordered_set<Automaton_Node*> states =
+		compute_epsilon_closure(this->root);
+    states = compute_epsilon_closure(states);
+    for(auto it = children->begin(); it != children->end(); it++)
+	{
+		states = compute_one_step_closure(states, *it);
+		states = compute_epsilon_closure(states);
+	}
+
+	return states.count(final_state) == 1;
 }

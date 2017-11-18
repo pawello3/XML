@@ -1,3 +1,5 @@
+// Author: Paweł Guzewicz
+
 #ifndef XML_TREE_HPP_INCLUDED
 #define XML_TREE_HPP_INCLUDED
 

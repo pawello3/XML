@@ -1,3 +1,5 @@
+// Author: Paweł Guzewicz
+
 #include "XML_Tree.hpp"
 #include <fstream>
 #include <cassert>

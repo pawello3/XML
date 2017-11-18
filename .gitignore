@@ -1,4 +1,8 @@
 test/*
+.ipynb_checkpoints/
+memory_filesize.jpg
+time_filesize.jpg
+time_memory.jpg
 
 # Prerequisites
 *.d

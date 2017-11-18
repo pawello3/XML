@@ -1,3 +1,5 @@
+// Author: Paweł Guzewicz
+
 #ifndef XML_PARSER_HPP_INCLUDED
 #define XML_PARSER_HPP_INCLUDED
 

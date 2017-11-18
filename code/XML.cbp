@@ -16,6 +16,8 @@
 				<Option parameters="../test/test.xml ../test/test.dtd" />
 			</Target>
 		</Build>
+		<Unit filename="XML_DTD_Validator.cpp" />
+		<Unit filename="XML_DTD_Validator.hpp" />
 		<Unit filename="XML_Parser.cpp" />
 		<Unit filename="XML_Parser.hpp" />
 		<Unit filename="XML_Tree.cpp" />
