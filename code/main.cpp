@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 	}
 	catch(std::string ex)
 	{
-		std::cerr << ex + "\n";
+		std::cerr << ex + "\n"; // can not happen if parse method was called
 	}
 
 	if(is_well_formed)

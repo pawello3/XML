@@ -34,10 +34,15 @@ class Automaton
 
 		std::string convert_to_reverse_Polish_notation(std::string input);
 		void build_automaton(void);
-		std::unordered_set<Automaton_Node*> compute_epsilon_closure(Automaton_Node* node);
-		std::unordered_set<Automaton_Node*> compute_epsilon_closure(std::unordered_set<Automaton_Node*> states);
-		std::unordered_set<Automaton_Node*> compute_one_step_closure(Automaton_Node* node, char step);
-		std::unordered_set<Automaton_Node*> compute_one_step_closure(std::unordered_set<Automaton_Node*> states, char step);
+		std::unordered_set<Automaton_Node*>
+		compute_epsilon_closure(Automaton_Node* node);
+		std::unordered_set<Automaton_Node*>
+		compute_epsilon_closure(std::unordered_set<Automaton_Node*> states);
+		std::unordered_set<Automaton_Node*>
+		compute_one_step_closure(Automaton_Node* node, char label);
+		std::unordered_set<Automaton_Node*>
+		compute_one_step_closure(std::unordered_set<Automaton_Node*> states,
+		char label);
 };
 
 #endif // XML_DTD_VALIDATOR_HPP_INCLUDED

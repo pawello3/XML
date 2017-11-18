@@ -14,59 +14,95 @@ Automaton::~Automaton(void)
 	delete root;
 }
 
-std::unordered_set<Automaton_Node*> Automaton::compute_epsilon_closure(Automaton_Node* node)
+std::unordered_set<Automaton_Node*>
+Automaton::compute_epsilon_closure(Automaton_Node* node)
 {
-	std::unordered_set<Automaton_Node*> new_states = std::unordered_set<Automaton_Node*>();
+	std::unordered_set<Automaton_Node*> new_states =
+		std::unordered_set<Automaton_Node*>();
+
+	// add the state itself
+	new_states.insert(node);
+
+	// add the states accessible in one epsilon step
 	if(node->type1 == 127)
 		new_states.insert(node->next1);
 	if(node->type2 == 127)
 		new_states.insert(node->next2);
-	new_states.insert(node);
+
 	return new_states;
 }
 
-std::unordered_set<Automaton_Node*> Automaton::compute_epsilon_closure(std::unordered_set<Automaton_Node*> states)
+std::unordered_set<Automaton_Node*>
+Automaton::compute_epsilon_closure(std::unordered_set<Automaton_Node*> states)
 {
-	std::unordered_set<Automaton_Node*> states_iter_before = std::unordered_set<Automaton_Node*>();
-	std::unordered_set<Automaton_Node*> states_iter_after = std::unordered_set<Automaton_Node*>();
-	states_iter_after.insert(states.begin(), states.end());
-	std::unordered_set<Automaton_Node*> new_states_partial = std::unordered_set<Automaton_Node*>();
+	std::unordered_set<Automaton_Node*> states_iter_before =
+		std::unordered_set<Automaton_Node*>();
 
-	do // saturate the set of states by doing all possible epsilon steps (0 or more)
+	std::unordered_set<Automaton_Node*> states_iter_after =
+		std::unordered_set<Automaton_Node*>();
+
+	states_iter_after.insert(states.begin(), states.end());
+
+	std::unordered_set<Automaton_Node*> new_states_partial =
+		std::unordered_set<Automaton_Node*>();
+
+	do // saturate the set of states with all possible epsilon steps (0 or more)
 	{
 		states_iter_before.clear();
-		states_iter_before.insert(states_iter_after.begin(), states_iter_after.end());
+
+		states_iter_before.insert(states_iter_after.begin(),
+			states_iter_after.end());
+
 		states_iter_after.clear();
+
 		new_states_partial.clear();
-		for(auto it = states_iter_before.begin(); it != states_iter_before.end(); it++)
+
+		for(auto it = states_iter_before.begin();
+			it != states_iter_before.end(); it++)
 		{
 			new_states_partial = compute_epsilon_closure(*it);
-			states_iter_after.insert(new_states_partial.begin(), new_states_partial.end());
+			states_iter_after.insert(new_states_partial.begin(),
+				new_states_partial.end());
 		}
-		states_iter_after.insert(states_iter_before.begin(), states_iter_before.end());
+
+		states_iter_after.insert(states_iter_before.begin(),
+			states_iter_before.end());
 	}
 	while(states_iter_before != states_iter_after);
 
 	return states_iter_after;
 }
 
-std::unordered_set<Automaton_Node*> Automaton::compute_one_step_closure(Automaton_Node* node, char step)
+std::unordered_set<Automaton_Node*>
+Automaton::compute_one_step_closure(Automaton_Node* node, char label)
 {
-	std::unordered_set<Automaton_Node*> new_states = std::unordered_set<Automaton_Node*>();
-	if(node->type1 == step)
+	std::unordered_set<Automaton_Node*> new_states =
+		std::unordered_set<Automaton_Node*>();
+
+	// add the states accessible in one step following label
+	if(node->type1 == label)
 		new_states.insert(node->next1);
-	if(node->type2 == step)
+	if(node->type2 == label)
 		new_states.insert(node->next2);
+
 	return new_states;
 }
 
-std::unordered_set<Automaton_Node*> Automaton::compute_one_step_closure(std::unordered_set<Automaton_Node*> states, char step)
+std::unordered_set<Automaton_Node*>
+Automaton::compute_one_step_closure(std::unordered_set<Automaton_Node*> states,
+	char label)
 {
-	std::unordered_set<Automaton_Node*> new_states = std::unordered_set<Automaton_Node*>();
-	std::unordered_set<Automaton_Node*> new_states_partial = std::unordered_set<Automaton_Node*>();
+	std::unordered_set<Automaton_Node*> new_states =
+		std::unordered_set<Automaton_Node*>();
+
+	std::unordered_set<Automaton_Node*> new_states_partial =
+		std::unordered_set<Automaton_Node*>();
+
+	/* add all the states accessible in one step following label from the
+	current state's set*/
 	for(auto it = states.begin(); it != states.end(); it++)
 	{
-		new_states_partial = compute_one_step_closure(*it, step);
+		new_states_partial = compute_one_step_closure(*it, label);
 		new_states.insert(new_states_partial.begin(), new_states_partial.end());
 	}
 	return new_states;
@@ -84,37 +120,14 @@ bool Automaton::matches_regex(std::list<char>* children)
 	if(root == nullptr)
 		return children->size() == 0;
 
-	/*std::cout << "Root" << std::endl;
-	std::cout << root->type1 << " " << root->next1 << std::endl;
-	std::cout << root->type2 << " " << root->next2 << std::endl;*/
-
 	// simulate NFA
-    std::unordered_set<Automaton_Node*> states = compute_epsilon_closure(this->root);
+    std::unordered_set<Automaton_Node*> states =
+		compute_epsilon_closure(this->root);
     states = compute_epsilon_closure(states);
-    /*for(auto it = states.begin(); it != states.end(); it++)
-	{
-		std::cout << "\tL0\n";
-		std::cout << "\t" << (*it)->type1 << " " << (*it)->next1 << std::endl;
-		std::cout << "\t" << (*it)->type2 << " " << (*it)->next2 << std::endl;
-	}*/
-
     for(auto it = children->begin(); it != children->end(); it++)
 	{
-		//std::cout << "\t\tL1 " << (*it) << std::endl;
 		states = compute_one_step_closure(states, *it);
-		/*for(auto it = states.begin(); it != states.end(); it++)
-		{
-			std::cout << "\t\t\tL2\n";
-			std::cout << "\t\t\t" << (*it)->type1 << " " << (*it)->next1 << std::endl;
-			std::cout << "\t\t\t" << (*it)->type2 << " " << (*it)->next2 << std::endl;
-		}*/
 		states = compute_epsilon_closure(states);
-		/*for(auto it = states.begin(); it != states.end(); it++)
-		{
-			std::cout << "\t\t\tL3\n";
-			std::cout << "\t\t\t" << (*it)->type1 << " " << (*it)->next1 << std::endl;
-			std::cout << "\t\t\t" << (*it)->type2 << " " << (*it)->next2 << std::endl;
-		}*/
 	}
 
 	return states.count(final_state) == 1;
@@ -178,29 +191,32 @@ std::string Automaton::convert_to_reverse_Polish_notation(std::string input)
 
 void Automaton::build_automaton(void)
 {
-    std::string postfix_regex = convert_to_reverse_Polish_notation(this->regular_expression);
+    std::string postfix_regex =
+		convert_to_reverse_Polish_notation(this->regular_expression);
     if(postfix_regex == "_")
 		return;
 
-    std::stack<Automaton_Fragment*> fragments = std::stack<Automaton_Fragment*>();
-
-    // char = 0 undefined
-    // char = 127 epsilon transition
-
+    std::stack<Automaton_Fragment*> fragments =
+		std::stack<Automaton_Fragment*>();
 	Automaton_Node* left = nullptr;
 	Automaton_Node* right = nullptr;
 	Automaton_Fragment* fragment_top = nullptr;
 	Automaton_Fragment* fragment_top1 = nullptr;
 	Automaton_Fragment* fragment_top2 = nullptr;
 
-	//std::cout << postfix_regex << std::endl;
+	// Types of the transitions
+	// label: character describing the transition
+	// '\0': no transition (also pointer set to nullptr)
+    // 127: epsilon transition
+
+    // each node has at most two transitions by construction
+    // endNode is always the final state of the subautomaton (points to nowhere)
 
 	for(unsigned int i = 0; i < postfix_regex.size(); i++)
 	{
 		switch(postfix_regex[i])
 		{
 			case '.':
-				//std::cout << ".\n";
 				fragment_top2 = fragments.top();
 				fragments.pop();
 				fragment_top1 = fragments.top();
@@ -215,7 +231,6 @@ void Automaton::build_automaton(void)
 				fragments.push(fragment_top1);
 				break;
 			case '?':
-				//std::cout << "?\n";
 				fragment_top = fragments.top();
 				fragments.pop();
 				left = new Automaton_Node();
@@ -237,7 +252,6 @@ void Automaton::build_automaton(void)
 				fragments.push(fragment_top);
 				break;
 			case '+':
-				//std::cout << "+\n";
 				fragment_top = fragments.top();
 				fragments.pop();
 				left = new Automaton_Node();
@@ -259,7 +273,6 @@ void Automaton::build_automaton(void)
 				fragments.push(fragment_top);
 				break;
 			case '*':
-				//std::cout << "*\n";
 				fragment_top = fragments.top();
 				fragments.pop();
 				left = new Automaton_Node();
@@ -281,7 +294,6 @@ void Automaton::build_automaton(void)
 				fragments.push(fragment_top);
 				break;
 			default:
-				//std::cout << "letter\n";
 				left = new Automaton_Node();
 				right = new Automaton_Node();
 				left->next1 = right;

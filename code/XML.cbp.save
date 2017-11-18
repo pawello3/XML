@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="XML" />
+		<Option makefile_is_custom="1" />
+		<Option execution_dir="../../XML" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="cpp">
+				<Option output="../bin/XML_Validator" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="../test/test.xml ../test/test.dtd" />
+			</Target>
+		</Build>
+		<Unit filename="XML_DTD_Validator.cpp" />
+		<Unit filename="XML_DTD_Validator.hpp" />
+		<Unit filename="XML_Parser.cpp" />
+		<Unit filename="XML_Parser.hpp" />
+		<Unit filename="XML_Tree.cpp" />
+		<Unit filename="XML_Tree.hpp" />
+		<Unit filename="main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
