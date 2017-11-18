@@ -3,9 +3,9 @@ ERRORSFLAGS=-Wall -Wextra -Werror -O2
 STANDARDFLAGS=-std=c++11
 LIBRARIES=-lm
 CODE_DIRECTORY=code
-_DEPENDENCIES=XML_Parser.hpp XML_Tree.hpp
+_DEPENDENCIES=XML_Parser.hpp XML_Tree.hpp XML_DTD_Validator.hpp
 DEPENDENCIES=$(patsubst %,$(CODE_DIRECTORY)/%,$(_DEPENDENCIES))
-_SOURCES=main.cpp XML_Parser.cpp XML_Tree.cpp
+_SOURCES=main.cpp XML_Parser.cpp XML_Tree.cpp XML_DTD_Validator.cpp
 SOURCES=$(patsubst %,$(CODE_DIRECTORY)/%,$(_SOURCES))
 OBJECTS_DIRECTORY=objects
 _OBJECTS=$(_SOURCES:.cpp=.o)
