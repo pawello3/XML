@@ -1,7 +1,6 @@
 #ifndef XML_PARSER_HPP_INCLUDED
 #define XML_PARSER_HPP_INCLUDED
 
-#include <ifstream>
 #include <string>
 #include <stack>
 #include "XML_Tree.hpp"
@@ -9,7 +8,7 @@
 class XML_Parser
 {
 	public:
-		XML_Parser(std::ifstream xml_file, XML_Tree* tree);
+		XML_Parser(std::string xml_file, XML_Tree* tree);
 		~XML_Parser(void);
 
 		void parse(void);
@@ -21,7 +20,7 @@ class XML_Parser
 		}
 
 	private:
-		std::ifstream xml_file;
+		std::string xml_file;
 		std::stack<std::string>* validity_stack;
 		XML_Tree* tree;
 		bool precomputed;

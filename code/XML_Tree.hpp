@@ -1,7 +1,6 @@
 #ifndef XML_TREE_HPP_INCLUDED
 #define XML_TREE_HPP_INCLUDED
 
-#include <ifstream>
 #include <list>
 #include <unordered_map>
 #include <unordered_set>
@@ -50,14 +49,18 @@ class Tree_Node
 
 		inline char get_name(void)
 		{
-			return this.name;
+			return this->name;
 		}
 		inline Tree_Node* get_parent(void)
 		{
-			return this.parent;
+			return this->parent;
+		}
+		inline std::list<Tree_Node*>* get_children(void)
+		{
+			return this->children;
 		}
 		Tree_Node* add_child(char name);
-		bool is_valid(std::unordered_map<char, Automaton*> automata);
+		bool is_valid(std::unordered_map<char, Automaton*>* automata);
 
 	private:
 		char name;
@@ -73,17 +76,17 @@ class XML_Tree
 
 		inline void add_child(char name) throw(std::string)
 		{
-			if(contex == nullptr)
+			if(this->context == nullptr)
 				throw std::string("Wrong context");
-			contex = contex->add_child(name);
+			this->context = this->context->add_child(name);
 		}
 		inline void go_to_parent(void) throw(std::string)
 		{
-			if(contex == nullptr)
+			if(this->context == nullptr)
 				throw std::string("Wrong context");
-			contex = contex->get_parent();
+			this->context = this->context->get_parent();
 		}
-		void declare_automata(std::ifstream dtd_file);
+		void declare_automata(std::string dtd_file);
 		bool is_valid(void) throw(std::string);
 
 	private:

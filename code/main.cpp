@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include "XML_Parser.hpp"
 #include "XML_Tree.hpp"
 
@@ -13,11 +12,8 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	std::ifstream xml_file;
-	xml_file.open(argv[1]);
-
 	XML_Tree* tree = new XML_Tree();
-	XML_Parser* parser = new XML_Parser(xml_file, tree);
+	XML_Parser* parser = new XML_Parser(argv[1], tree);
 
 	parser->parse();
 	bool is_well_formed = true;
@@ -34,23 +30,18 @@ int main(int argc, char* argv[])
 	{
 		std::cout << "well-formed\n";
 
-		std::ifstream dtd_file;
-		dtd_file.open(argv[2]);
-		tree->declare_automata(dtd_file);
+		tree->declare_automata(argv[2]);
 
 		if(tree->is_valid())
 			std::cout << "valid\n";
 		else
 			std::cout << "not valid\n";
-
-		dtd_file.close();
 	}
 	else
 		std::cout << "not well-formed\nnot valid\n";
 
 	delete tree;
 	delete parser;
-	xml_file.close();
 
 	return 0;
 }
